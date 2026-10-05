@@ -1,0 +1,60 @@
+name: Security
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: "0 6 * * 1"  # Every Monday at 06:00 UTC
+
+jobs:
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Audit dependencies
+        run: dart pub audit
+
+      - name: Check for hardcoded secrets in Dart files
+        run: |
+          # Fail if any non-test Dart file contains suspicious patterns
+          if grep -rn \
+            -e "SECRET\s*=\s*['\"]" \
+            -e "PASSWORD\s*=\s*['\"]" \
+            -e "API_KEY\s*=\s*['\"]" \
+            -e "PRIVATE_KEY\s*=\s*['\"]" \
+            --include="*.dart" \
+            --exclude-dir="test" \
+            lib/; then
+            echo "FAIL: Potential hardcoded secret found in source code"
+            exit 1
+          else
+            echo "OK: No hardcoded secrets detected"
+          fi
+
+      - name: Check no .env files committed
+        run: |
+          if find . -name ".env" -not -path "*/.git/*" | grep -q .; then
+            echo "FAIL: .env file found in repository"
+            exit 1
+          else
+            echo "OK: No .env files found"
+          fi

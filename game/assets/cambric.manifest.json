@@ -1,0 +1,40 @@
+{
+  "manifestVersion": 1,
+  "product": {
+    "type": "game",
+    "name": "Cambric Game",
+    "id": "cambric-game",
+    "packageId": "com.cambric.game",
+    "version": "0.1.0",
+    "buildNumber": 1,
+    "releaseChannel": "stable",
+    "publisher": "Cambric",
+    "developer": "Cambric",
+    "website": "https://cambric.dev",
+    "repository": "Cambric-software/game-template",
+    "support": "https://cambric.dev/support"
+  },
+  "platforms": [
+    "android",
+    "windows",
+    "linux"
+  ],
+  "capabilities": {
+    "touch": true,
+    "keyboard": true,
+    "mouse": true,
+    "gamepad": true,
+    "offline": true,
+    "saves": true,
+    "localization": true,
+    "updates": true
+  },
+  "locales": [
+    "en",
+    "ar"
+  ],
+  "gameType": "2d",
+  "orientation": "landscape",
+  "frameworkVersion": "1.38.2",
+  "cambricTemplateVersion": "0.1.0"
+}

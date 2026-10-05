@@ -1,0 +1,58 @@
+{
+  "locale": "en",
+  "direction": "ltr",
+
+  "app_name": "Cambric Game",
+
+  "menu_start": "Start",
+  "menu_settings": "Settings",
+  "menu_credits": "Credits",
+  "menu_exit": "Exit",
+  "menu_resume": "Resume",
+  "menu_quit_to_menu": "Quit to Menu",
+
+  "settings_title": "Settings",
+  "settings_audio": "Audio",
+  "settings_graphics": "Graphics",
+  "settings_controls": "Controls",
+  "settings_language": "Language",
+  "settings_save": "Save",
+  "settings_reset": "Reset to Defaults",
+  "settings_back": "Back",
+
+  "settings_master_volume": "Master Volume",
+  "settings_music_volume": "Music Volume",
+  "settings_sfx_volume": "Sound Effects",
+  "settings_fullscreen": "Fullscreen",
+  "settings_show_fps": "Show FPS",
+
+  "loading_title": "Loading",
+  "loading_please_wait": "Please wait…",
+
+  "save_saving": "Saving…",
+  "save_saved": "Game saved.",
+  "save_failed": "Save failed. Your previous save is intact.",
+  "save_corrupt": "Save file appears corrupted. Attempting recovery.",
+  "save_recovered": "Save recovered from backup.",
+  "save_recovery_failed": "Recovery failed. Starting fresh.",
+
+  "error_generic": "An error occurred.",
+  "error_asset_load": "Failed to load asset: {name}",
+  "error_platform": "A platform error occurred: {detail}",
+
+  "version_label": "Version {version}",
+  "update_available": "Update available: {version}",
+  "update_download": "Download Update",
+  "update_later": "Later",
+  "update_downloading": "Downloading update…",
+  "update_installing": "Installing update…",
+  "update_failed": "Update failed. The current version remains installed.",
+
+  "credits_title": "Credits",
+  "credits_built_with": "Built with Cambric Game Template",
+
+  "confirm_yes": "Yes",
+  "confirm_no": "No",
+  "confirm_ok": "OK",
+  "confirm_cancel": "Cancel"
+}

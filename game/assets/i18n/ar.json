@@ -1,0 +1,58 @@
+{
+  "locale": "ar",
+  "direction": "rtl",
+
+  "app_name": "لعبة كامبريك",
+
+  "menu_start": "ابدأ",
+  "menu_settings": "الإعدادات",
+  "menu_credits": "الشارات",
+  "menu_exit": "خروج",
+  "menu_resume": "استئناف",
+  "menu_quit_to_menu": "العودة إلى القائمة",
+
+  "settings_title": "الإعدادات",
+  "settings_audio": "الصوت",
+  "settings_graphics": "الرسومات",
+  "settings_controls": "التحكم",
+  "settings_language": "اللغة",
+  "settings_save": "حفظ",
+  "settings_reset": "إعادة إلى الافتراضي",
+  "settings_back": "رجوع",
+
+  "settings_master_volume": "مستوى الصوت الرئيسي",
+  "settings_music_volume": "صوت الموسيقى",
+  "settings_sfx_volume": "صوت المؤثرات",
+  "settings_fullscreen": "ملء الشاشة",
+  "settings_show_fps": "عرض FPS",
+
+  "loading_title": "جارٍ التحميل",
+  "loading_please_wait": "يرجى الانتظار…",
+
+  "save_saving": "جارٍ الحفظ…",
+  "save_saved": "تم الحفظ.",
+  "save_failed": "فشل الحفظ. ملف الحفظ السابق لا يزال سليماً.",
+  "save_corrupt": "يبدو أن ملف الحفظ تالف. جارٍ محاولة الاسترداد.",
+  "save_recovered": "تم استرداد الملف من النسخة الاحتياطية.",
+  "save_recovery_failed": "فشل الاسترداد. سيبدأ تشغيل جديد.",
+
+  "error_generic": "حدث خطأ.",
+  "error_asset_load": "فشل تحميل الملف: {name}",
+  "error_platform": "حدث خطأ في المنصة: {detail}",
+
+  "version_label": "الإصدار {version}",
+  "update_available": "تحديث متاح: {version}",
+  "update_download": "تنزيل التحديث",
+  "update_later": "لاحقاً",
+  "update_downloading": "جارٍ تنزيل التحديث…",
+  "update_installing": "جارٍ تثبيت التحديث…",
+  "update_failed": "فشل التحديث. الإصدار الحالي لا يزال مثبتاً.",
+
+  "credits_title": "الشارات",
+  "credits_built_with": "مبني بقالب Cambric للألعاب",
+
+  "confirm_yes": "نعم",
+  "confirm_no": "لا",
+  "confirm_ok": "موافق",
+  "confirm_cancel": "إلغاء"
+}

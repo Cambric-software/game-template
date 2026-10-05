@@ -1,0 +1,81 @@
+# ── Flutter / Dart ───────────────────────────────────────────────────────
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+build/
+.pub-cache/
+.pub/
+
+# ── IDE ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# ── Android ──────────────────────────────────────────────────────────────
+game/android/.gradle/
+game/android/local.properties
+game/android/key.properties
+*.jks
+*.keystore
+
+# ── Windows ──────────────────────────────────────────────────────────────
+game/windows/flutter/ephemeral/
+
+# ── Linux ────────────────────────────────────────────────────────────────
+game/linux/flutter/ephemeral/
+
+# ── Game saves / user data (never commit player data) ────────────────────
+*.sav
+*.sav.bak
+*.sav.tmp
+saves/
+autosave/
+
+# ── Logs ─────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Generated / cache ────────────────────────────────────────────────────
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+cache/
+.cache/
+
+# ── Release artifacts ────────────────────────────────────────────────────
+*.apk
+*.aab
+*.exe
+*.msix
+*.zip
+*.tar.gz
+*.sha256
+release/
+dist/
+
+# ── Secrets ──────────────────────────────────────────────────────────────
+*.env
+.env.*
+secrets/
+credentials.json
+google-services.json
+GoogleService-Info.plist
+
+# ── Temp files ───────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*~
+
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Node ─────────────────────────────────────────────────────────────────
+node_modules/
