@@ -10,9 +10,6 @@ final _log = gameLogger('AssetLoader');
 ///
 /// Wraps Flame's asset loading APIs and tracks what is loaded.
 /// Assets are released when their scene is disposed.
-///
-/// Never load assets directly with Flame.images — go through here
-/// so the template can track and clean up asset memory.
 class AssetLoader {
   AssetLoader();
 
@@ -34,23 +31,38 @@ class AssetLoader {
     }
   }
 
-  /// Load a sprite sheet divided into [cols] × [rows] uniform frames.
-  Future<SpriteSheet> loadSpriteSheet(
+  /// Load a sprite animation from a sprite sheet image.
+  ///
+  /// [cols] and [rows] define how many frames are in the sheet.
+  /// Each frame is [cols × rows] cells, read left-to-right, top-to-bottom.
+  Future<SpriteAnimation> loadSpriteAnimation(
     String path, {
     required int cols,
     required int rows,
+    required double stepTime,
+    bool loop = true,
   }) async {
     try {
       final image = await Flame.images.load(path);
       _loadedImages.add(path);
-      _log.fine('Sprite sheet loaded: $path (${cols}x$rows)');
-      return SpriteSheet.fromColumnsAndRows(
-        image: image,
-        columns: cols,
-        rows: rows,
-      );
+      final frameWidth = (image.width / cols).toDouble();
+      final frameHeight = (image.height / rows).toDouble();
+      final sprites = <Sprite>[];
+
+      for (var row = 0; row < rows; row++) {
+        for (var col = 0; col < cols; col++) {
+          sprites.add(Sprite(
+            image,
+            srcPosition: Vector2(col * frameWidth, row * frameHeight),
+            srcSize: Vector2(frameWidth, frameHeight),
+          ));
+        }
+      }
+
+      _log.fine('Sprite animation loaded: $path (${cols * rows} frames)');
+      return SpriteAnimation.spriteList(sprites, stepTime: stepTime, loop: loop);
     } catch (e, st) {
-      _log.severe('Failed to load sprite sheet: $path', e, st);
+      _log.severe('Failed to load sprite animation: $path', e, st);
       rethrow;
     }
   }
@@ -71,18 +83,8 @@ class AssetLoader {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
 
-  /// Check if an image is currently loaded.
   bool isImageLoaded(String path) => _loadedImages.contains(path);
-
-  /// Check if an audio file is currently loaded.
   bool isAudioLoaded(String path) => _loadedAudio.contains(path);
-
-  /// Release a specific image from cache.
-  void unloadImage(String path) {
-    Flame.images.clearCache();
-    _loadedImages.remove(path);
-    _log.fine('Image unloaded: $path');
-  }
 
   /// Release all assets loaded through this loader.
   /// Call when the owning scene is disposed.
@@ -93,11 +95,7 @@ class AssetLoader {
     _log.fine('All assets unloaded');
   }
 
-  /// All currently loaded image paths.
   List<String> get loadedImages => List.unmodifiable(_loadedImages);
-
-  /// All currently loaded audio paths.
   List<String> get loadedAudio => List.unmodifiable(_loadedAudio);
-
   int get totalLoaded => _loadedImages.length + _loadedAudio.length;
 }

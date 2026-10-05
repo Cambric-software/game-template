@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 
-import '../core/logging/logging_service.dart';
-import '../core/platform/platform_service.dart';
-import '../core/security/security_service.dart';
+import '../logging/logging_service.dart';
+import '../platform/platform_service.dart';
+import '../security/security_service.dart';
 
 final _log = gameLogger('BackupService');
 
@@ -26,13 +26,8 @@ class BackupInfo {
 
 /// Creates and manages save backups.
 ///
-/// Backups are ZIP archives of the saves directory. They are kept
-/// locally and never uploaded automatically.
-///
-/// A safe cleaner ([cleanOldBackups]) removes old archives beyond
-/// [keepCount], preserving the most recent backups.
-///
-/// Backup archives NEVER touch or modify save files.
+/// Backups are ZIP archives of the saves directory. Kept locally,
+/// never uploaded automatically.
 class BackupService {
   BackupService();
 
@@ -40,7 +35,7 @@ class BackupService {
   final SecurityService _security = SecurityService();
 
   /// Create a ZIP backup of all saves for [gameId].
-  /// Returns the path of the created archive, or null on failure.
+  /// Returns the archive path, or null on failure.
   Future<String?> backupSaves(String gameId) async {
     try {
       final savesDir = await _platform.getSavesDirectory(gameId);
@@ -54,9 +49,7 @@ class BackupService {
 
       final encoder = ZipFileEncoder();
       encoder.create(archivePath);
-
-      final saveFiles = savesDir.listSync().whereType<File>();
-      for (final file in saveFiles) {
+      for (final file in savesDir.listSync().whereType<File>()) {
         encoder.addFile(file);
       }
       encoder.close();
@@ -88,7 +81,6 @@ class BackupService {
           sizeBytes: stat.size,
         ));
       }
-
       infos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return infos;
     } catch (e, st) {
@@ -98,24 +90,21 @@ class BackupService {
   }
 
   /// Restore saves from a backup archive.
-  /// Returns true on success.
   Future<bool> restoreBackup(String gameId, String backupPath) async {
     try {
       final savesDir = await _platform.getSavesDirectory(gameId);
       final bytes = await File(backupPath).readAsBytes();
       final archive = ZipDecoder().decodeBytes(bytes);
-
       for (final file in archive) {
         if (file.isFile) {
-          final outPath = '${savesDir.path}/${file.name}';
-          await File(outPath).writeAsBytes(file.content as List<int>);
+          await File('${savesDir.path}/${file.name}')
+              .writeAsBytes(file.content as List<int>);
         }
       }
-
       _log.info('Backup restored from $backupPath');
       return true;
     } catch (e, st) {
-      _log.severe('Failed to restore backup from $backupPath', e, st);
+      _log.severe('Failed to restore backup', e, st);
       return false;
     }
   }
@@ -125,14 +114,12 @@ class BackupService {
     try {
       final backups = await listBackups(gameId);
       if (backups.length <= keepCount) return;
-
-      final toDelete = backups.skip(keepCount);
-      for (final backup in toDelete) {
+      for (final backup in backups.skip(keepCount)) {
         await File(backup.path).delete();
         _log.info('Deleted old backup: ${backup.path}');
       }
     } catch (e, st) {
-      _log.warning('Failed to clean old backups for $gameId', e, st);
+      _log.warning('Failed to clean old backups', e, st);
     }
   }
 }

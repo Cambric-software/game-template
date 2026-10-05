@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Rect;
 
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
@@ -9,17 +10,13 @@ final _log = gameLogger('GameCamera');
 
 /// Camera system wrapping Flame's CameraComponent.
 ///
-/// Provides a clean Cambric API over Flame's camera primitives:
-/// follow, zoom, shake, bounds clamping, and smooth movement.
+/// Provides a clean Cambric API: follow, zoom, shake, bounds clamping.
 class GameCamera {
   GameCamera({CameraComponent? flameCamera}) {
     camera = flameCamera ?? CameraComponent();
   }
 
   late final CameraComponent camera;
-
-  PositionComponent? _followTarget;
-  Vector2? _followOffset;
 
   double _zoom = 1.0;
   double _targetZoom = 1.0;
@@ -34,23 +31,18 @@ class GameCamera {
   // ── Follow ────────────────────────────────────────────────────────────
 
   /// Camera will follow [target] each frame.
-  void follow(PositionComponent target, {Vector2? offset}) {
-    _followTarget = target;
-    _followOffset = offset;
+  void follow(PositionComponent target) {
     camera.follow(target, horizontalOnly: false);
     _log.fine('Camera following entity');
   }
 
   void stopFollowing() {
-    _followTarget = null;
-    _followOffset = null;
     camera.stop();
     _log.fine('Camera stopped following');
   }
 
   // ── Position ──────────────────────────────────────────────────────────
 
-  /// Instantly move camera to [position].
   void snapTo(Vector2 position) {
     camera.moveTo(position);
   }
@@ -65,7 +57,6 @@ class GameCamera {
     camera.viewfinder.zoom = _zoom;
   }
 
-  /// Smoothly animate zoom to [target] over time.
   void zoomTo(double target, {double speed = 2.0}) {
     _targetZoom = target.clamp(0.1, 10.0);
     _zoomSpeed = speed;
@@ -73,11 +64,9 @@ class GameCamera {
 
   // ── Shake ─────────────────────────────────────────────────────────────
 
-  /// Shake the camera for [durationSeconds] with [intensity] pixels.
   void shake(double intensity, double durationSeconds) {
     _shakeIntensity = intensity;
     _shakeRemaining = durationSeconds;
-    _log.fine('Camera shake: ${intensity}px for ${durationSeconds}s');
   }
 
   // ── Update ────────────────────────────────────────────────────────────
