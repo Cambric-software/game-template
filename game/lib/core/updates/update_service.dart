@@ -6,7 +6,6 @@ import '../cache/cache_service.dart';
 import '../features/feature_flags.dart';
 import '../identity/game_identity.dart';
 import '../logging/logging_service.dart';
-import '../security/security_service.dart';
 
 final _log = gameLogger('UpdateService');
 
@@ -79,7 +78,6 @@ class DownloadResult {
     this.checksum,
     this.error,
   });
-
   final bool success;
   final String? filePath;
   final String? checksum;
@@ -95,15 +93,12 @@ class UpdateService {
   UpdateService();
 
   final CacheService _cache = CacheService();
-  final SecurityService _security = SecurityService();
 
   static const String _cacheKey = 'update_check';
   static const Duration _cacheTtl = Duration(hours: 1);
 
   /// Check for a newer version on GitHub Releases.
-  Future<UpdateCheckResult> checkForUpdate({
-    String? repository,
-  }) async {
+  Future<UpdateCheckResult> checkForUpdate({String? repository}) async {
     if (!FeatureFlags.updateChecks) {
       return UpdateCheckResult.noUpdate(GameIdentity.version);
     }
@@ -127,8 +122,7 @@ class UpdateService {
     }
 
     try {
-      final url =
-          'https://api.github.com/repos/$repo/releases/latest';
+      final url = 'https://api.github.com/repos/$repo/releases/latest';
       final response = await http
           .get(
             Uri.parse(url),
@@ -137,9 +131,7 @@ class UpdateService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
-        _log.warning(
-          'GitHub API returned ${response.statusCode} for $repo',
-        );
+        _log.warning('GitHub API returned ${response.statusCode} for $repo');
         return UpdateCheckResult.error(
           GameIdentity.version,
           'GitHub API error: ${response.statusCode}',
@@ -147,8 +139,8 @@ class UpdateService {
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final latestTag = (data['tag_name'] as String? ?? '')
-          .replaceFirst('v', '');
+      final latestTag =
+          (data['tag_name'] as String? ?? '').replaceFirst('v', '');
       final releaseNotes = data['body'] as String?;
 
       final hasUpdate = VersionComparator.isNewer(
@@ -165,7 +157,6 @@ class UpdateService {
         checkedAt: DateTime.now(),
       );
 
-      // Cache for 1 hour
       _cache.set(_cacheKey, result.toJson(), ttl: _cacheTtl);
       await _cache.persistToDisk(_cacheKey, result.toJson());
 
@@ -177,7 +168,6 @@ class UpdateService {
     } catch (e, st) {
       _log.warning('Update check failed', e, st);
 
-      // Try disk cache as fallback
       final diskCached = await _cache.loadFromDisk(_cacheKey);
       if (diskCached != null) {
         _log.info('Update check: using stale disk cache');
@@ -186,17 +176,13 @@ class UpdateService {
         );
       }
 
-      return UpdateCheckResult.error(
-        GameIdentity.version,
-        e.toString(),
-      );
+      return UpdateCheckResult.error(GameIdentity.version, e.toString());
     }
   }
 
   String? _extractDownloadUrl(Map<String, dynamic> release) {
     final assets = release['assets'] as List?;
     if (assets == null || assets.isEmpty) return null;
-    // Prefer the first asset that matches the current platform
     for (final asset in assets) {
       final name = (asset['name'] as String? ?? '').toLowerCase();
       if (name.contains('windows') && name.endsWith('.zip')) {

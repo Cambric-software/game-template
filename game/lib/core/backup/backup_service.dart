@@ -4,7 +4,6 @@ import 'package:archive/archive_io.dart';
 
 import '../logging/logging_service.dart';
 import '../platform/platform_service.dart';
-import '../security/security_service.dart';
 
 final _log = gameLogger('BackupService');
 
@@ -15,24 +14,20 @@ class BackupInfo {
     required this.createdAt,
     required this.sizeBytes,
   });
-
   final String path;
   final DateTime createdAt;
   final int sizeBytes;
-
-  @override
-  String toString() => 'BackupInfo($path, $createdAt, ${sizeBytes}B)';
 }
 
-/// Creates and manages save backups.
+/// Creates and manages save backups as ZIP archives.
 ///
-/// Backups are ZIP archives of the saves directory. Kept locally,
-/// never uploaded automatically.
+/// Backups are local only — never uploaded automatically.
+/// [cleanOldBackups] is safe: it only removes old zip archives,
+/// never save files.
 class BackupService {
   BackupService();
 
   final PlatformService _platform = PlatformService();
-  final SecurityService _security = SecurityService();
 
   /// Create a ZIP backup of all saves for [gameId].
   /// Returns the archive path, or null on failure.
@@ -40,7 +35,6 @@ class BackupService {
     try {
       final savesDir = await _platform.getSavesDirectory(gameId);
       final backupsDir = await _platform.getBackupsDirectory(gameId);
-
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
@@ -71,7 +65,6 @@ class BackupService {
           .whereType<File>()
           .where((f) => f.path.endsWith('.zip'))
           .toList();
-
       final infos = <BackupInfo>[];
       for (final file in files) {
         final stat = await file.stat();
@@ -109,7 +102,7 @@ class BackupService {
     }
   }
 
-  /// Delete old backups, keeping only the [keepCount] most recent.
+  /// Delete old backups, keeping only [keepCount] most recent.
   Future<void> cleanOldBackups(String gameId, {int keepCount = 3}) async {
     try {
       final backups = await listBackups(gameId);

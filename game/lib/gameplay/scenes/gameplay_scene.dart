@@ -1,7 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../game/input/input_action.dart';
 import '../../game/scenes/cambric_scene.dart';
 
 /// Minimal gameplay scene — the template starting point.

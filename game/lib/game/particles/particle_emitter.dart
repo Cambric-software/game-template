@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Canvas, Color, Paint;
+import 'dart:ui' show Color, Paint;
 
 import 'package:flame/components.dart';
 import 'package:flame/particles.dart';

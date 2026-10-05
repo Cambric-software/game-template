@@ -2,38 +2,32 @@ name: Test
 
 on:
   push:
-    branches: ["**"]
   pull_request:
-    branches: ["**"]
 
 jobs:
   test:
     name: Flutter Test
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: game
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
       - name: Install dependencies
+        working-directory: game
         run: flutter pub get
 
       - name: Run tests
-        run: flutter test --coverage
+        working-directory: game
+        run: flutter test --reporter expanded
 
       - name: Upload coverage (optional)
         uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
-          files: coverage/lcov.info
+          files: game/coverage/lcov.info
           fail_ci_if_error: false
