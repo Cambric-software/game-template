@@ -9,28 +9,31 @@ import '../game/runtime/cambric_game.dart';
 import '../game/state/game_state_manager.dart';
 import '../gameplay/scenes/gameplay_scene.dart';
 import '../gameplay/scenes/main_menu_scene.dart';
+import '../save/autosave_service.dart';
+import '../save/save_service.dart';
 import '../settings/settings_service.dart';
 
 final _log = gameLogger('Bootstrap');
 
 /// Orchestrates the complete startup sequence.
 ///
-/// Called once from main(). Initializes all services in dependency order,
-/// registers scenes, and returns a fully configured [CambricGame].
-///
 /// Startup order:
 ///   1. Feature flags
 ///   2. Logging
 ///   3. Configuration (manifest)
-///   4. Game identity (from manifest)
-///   5. Settings (player preferences)
+///   4. Game identity
+///   5. Settings
 ///   6. Localization
-///   7. Game + scene registration
+///   7. SaveService   ← initialized here so saves work from first frame
+///   8. AutosaveService
+///   9. Game + scene registration
 class BootstrapService {
   static bool _initialized = false;
 
-  /// Initialize all services and return a ready-to-run [CambricGame].
-  /// Must be called only once.
+  // Exposed so the gameplay loop can call autosave.onUpdate(dt, data)
+  static late final SaveService saveService;
+  static late final AutosaveService autosaveService;
+
   static Future<CambricGame> initialize() async {
     if (_initialized) {
       throw StateError('BootstrapService.initialize() called more than once.');
@@ -79,33 +82,48 @@ class BootstrapService {
     await l10n.load(settings.language);
     _log.info('Locale: ${l10n.currentLocale} (RTL: ${l10n.isRtl})');
 
-    // 7. Create game
+    // 7. Save system — must be initialized before any game scene starts
+    saveService = SaveService();
+    await saveService.initialize(config.gameId);
+    _log.info('Save system initialized');
+
+    // 8. Autosave service
+    autosaveService = AutosaveService();
+    autosaveService.initialize(saveService, settings);
+    _log.info('Autosave service initialized');
+
+    // 9. Create game
     final game = CambricGame();
 
-    // 8. Register scenes
+    // 10. Register scenes
     game.sceneManager.register('mainMenu', () {
       final scene = MainMenuScene();
       scene.onNavigate = (name) async {
         game.stateManager.transition(GameState.playing);
+        // Start autosave session when gameplay begins
+        autosaveService.startSession();
         await game.sceneManager.transitionTo(name);
       };
       return scene;
     });
     game.sceneManager.register('gameplay', () => GameplayScene());
 
-    // 9. State-change listener — sync state machine with scenes
+    // 11. State-change listener
     game.stateManager.addListener((from, to) async {
       switch (to) {
         case GameState.mainMenu:
+          // Stop autosave when returning to menu
+          autosaveService.stopSession();
           await game.sceneManager.transitionTo('mainMenu');
+        case GameState.exiting:
+          autosaveService.stopSession();
         default:
           break;
       }
     });
 
     _log.info(
-      'Bootstrap complete. '
-      'Scenes: ${game.sceneManager.registeredScenes}',
+      'Bootstrap complete. Scenes: ${game.sceneManager.registeredScenes}',
     );
 
     // Start in main menu

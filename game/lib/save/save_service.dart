@@ -30,6 +30,15 @@ class SaveService {
   factory SaveService() => _instance;
   SaveService._internal();
 
+  /// Create an isolated instance for testing with a custom [savesPath].
+  /// Does not use the singleton — safe to construct in tests.
+  factory SaveService.testInstance(String savesPath) {
+    final svc = SaveService._internal();
+    svc._savesPath = savesPath;
+    svc._initialized = true;
+    return svc;
+  }
+
   final PlatformService _platform = PlatformService();
   final StorageService _storage = StorageService();
   final SecurityService _security = SecurityService();

@@ -1,5 +1,7 @@
 # Cambric Game Template
 
+[![CI](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml)
+
 A reusable 2D game foundation for Android, Windows, and Linux.  
 Built with Flutter and Flame. Maintained by [Cambric](https://cambric.dev).
 

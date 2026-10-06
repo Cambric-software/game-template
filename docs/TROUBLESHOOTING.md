@@ -70,7 +70,19 @@ Linux builds are not supported on Windows. Use GitHub Actions (`ubuntu-latest`).
 
 ---
 
+## SaveService not initialized error
+
+**Symptom:** `StateError: SaveService not initialized. Call initialize() first.`
+
+**Cause:** `SaveService.initialize(gameId)` was not called before the first save/load attempt.
+
+**Fix:** This is handled automatically in `BootstrapService.initialize()` as of v0.1.0. If you see this error, ensure you are using the latest `bootstrap_service.dart` and not calling `SaveService()` before bootstrap completes.
+
+---
+
 ## Save file corruption
+
+If `SaveService.load()` returns `SaveResult.corrupt`:
 
 If `SaveService.load()` returns `SaveResult.corrupt`:
 
