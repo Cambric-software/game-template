@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml)
 
-A reusable 2D game foundation for Android, Windows, and Linux.  
+A reusable game foundation for Android, Windows, and Linux.  
 Built with Flutter and Flame. Maintained by [Cambric](https://cambric.dev).
+
+Supports any game genre: 2D platformer, 3D, top-down, puzzle, RPG, arcade, strategy, racing, horror, shooter, simulation, card/board, and custom.
 
 ---
 
@@ -19,13 +21,13 @@ Built with Flutter and Flame. Maintained by [Cambric](https://cambric.dev).
 
 ## Quick Start
 
-**Requirements:** Flutter 3.47+ stable · Dart 3.13+ · Git
+**Requirements:** Flutter 3.47+, Dart 3.13+, Git
 
 ```bash
 git clone https://github.com/Cambric-software/game-template my-game
 cd my-game
 
-# Configure your game identity, platforms, and input
+# Configure your game — genre, platforms, input, physics, multiplayer, DLC, monetization
 dart run scripts/cambric_setup.dart
 
 # Verify your environment
@@ -33,6 +35,19 @@ dart run scripts/cambric.dart doctor
 
 # Run the game
 dart run scripts/cambric.dart run
+```
+
+After building a release, use the install wizard:
+
+```bash
+# Windows
+dart run scripts/cambric.dart install windows
+
+# Android (requires connected device)
+dart run scripts/cambric.dart install android
+
+# Linux — shows CI download + install instructions
+dart run scripts/cambric.dart install linux
 ```
 
 ---
@@ -44,15 +59,19 @@ dart run scripts/cambric.dart run
 | Game loop (Flame, delta time, pause) | ✅ |
 | Scene system (load, transition, dispose) | ✅ |
 | Entity system (tags, components, lifecycle) | ✅ |
+| MovementSystem (auto-integrates PhysicsBodyComponent) | ✅ |
+| SpawnSystem / DespawnSystem | ✅ |
 | Input (keyboard, mouse, touch, gamepad abstraction) | ✅ |
+| Touch input wiring (tap/drag → InputAction, Android) | ✅ |
 | Audio (music, SFX, volume, mute, pause-aware) | ✅ |
 | Save system (slots, autosave, atomic writes, migration) | ✅ |
 | Settings (persisted player preferences) | ✅ |
 | Localization (English + Arabic, RTL) | ✅ |
 | Debug overlay (FPS, scene, entities, input — dev only) | ✅ |
 | Update system (GitHub Release discovery, verify) | ✅ |
-| Setup wizard | ✅ |
-| Developer CLI (12 commands) | ✅ |
+| Setup wizard (genre, physics, multiplayer, DLC, monetization) | ✅ |
+| Install wizard (Windows, Android, Linux) | ✅ |
+| Developer CLI (13 commands) | ✅ |
 | CI/CD (analyze, test, build, security, release) | ✅ |
 | Documentation | ✅ |
 
@@ -77,7 +96,9 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ```bash
 dart run scripts/cambric.dart doctor           # environment check
-dart run scripts/cambric.dart build windows    # Windows release
+dart run scripts/cambric.dart setup            # run the setup wizard
+dart run scripts/cambric.dart install windows  # install wizard
+dart run scripts/cambric.dart build windows    # Windows release build
 dart run scripts/cambric.dart build android    # Android APK
 dart run scripts/cambric.dart test             # run all tests
 dart run scripts/cambric.dart diagnose         # diagnostic report
@@ -95,7 +116,7 @@ See [scripts/README.md](scripts/README.md) for all commands.
 game-template/
 ├── .github/workflows/    CI/CD pipelines
 ├── docs/                 Full documentation
-├── scripts/              Developer CLI + setup wizard
+├── scripts/              Developer CLI + setup wizard + install wizard
 ├── .template/            Wizard defaults, distribution guides
 ├── game/                 Flutter + Flame project
 │   ├── lib/core/         Cambric infrastructure
@@ -104,7 +125,7 @@ game-template/
 │   ├── lib/save/         Save system
 │   ├── lib/settings/     Player settings
 │   ├── lib/ui/           Flutter app widget
-│   ├── test/             67 passing unit tests
+│   ├── test/             89 passing unit tests
 │   ├── tools/            Platform install helpers
 │   └── assets/           i18n, images, sprites, audio, fonts
 └── cambric.manifest.json Game identity

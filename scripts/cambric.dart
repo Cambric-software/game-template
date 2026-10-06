@@ -21,6 +21,8 @@ void main(List<String> args) async {
       await _version();
     case 'setup':
       await _setup();
+    case 'install':
+      await _install(rest);
     case 'clean':
       await _clean();
     case 'build':
@@ -124,6 +126,20 @@ Future<void> _setup() async {
   final result = await _run2('dart', ['run', 'scripts/cambric_setup.dart']);
   stdout.write(result.stdout);
   stderr.write(result.stderr);
+  exit(result.exitCode);
+}
+
+Future<void> _install(List<String> args) async {
+  final dartArgs = ['run', 'scripts/cambric_install.dart', ...args];
+  final result = await _run2('dart', dartArgs, inheritStdio: true);
+  exit(result.exitCode);
+}
+
+Future<void> _install(List<String> args) async {
+  final platform = args.isEmpty ? '' : args.first;
+  final dartArgs = ['run', 'scripts/cambric_install.dart'];
+  if (platform.isNotEmpty) dartArgs.add(platform);
+  final result = await _run2('dart', dartArgs, inheritStdio: true);
   exit(result.exitCode);
 }
 
@@ -506,6 +522,7 @@ Commands:
   doctor              Check development environment
   version             Print current game version
   setup               Run the game setup wizard
+  install [platform]  Run the install wizard (windows/android/linux)
   clean               Clean build artifacts
   build <platform>    Build for platform: windows, android, linux
   run [platform]      Run on platform (default: windows)
