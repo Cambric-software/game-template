@@ -34,7 +34,13 @@ jobs:
 
       - name: Dart analyze
         working-directory: game
-        run: flutter analyze
+        run: |
+          flutter analyze 2>&1 | tee analyze_output.txt
+          if grep -qE "^\s+(error|warning) -" analyze_output.txt; then
+            echo "Errors or warnings found."
+            exit 1
+          fi
+          echo "Analyze passed."
 
   # ── Test ─────────────────────────────────────────────────────────────────────
   test:
