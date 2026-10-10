@@ -63,7 +63,9 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y \
             clang cmake ninja-build pkg-config \
-            libgtk-3-dev liblzma-dev libstdc++-12-dev
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
 
       - uses: subosito/flutter-action@v2
         with:
@@ -159,4 +161,5 @@ jobs:
             release-files/linux/linux.tar.gz.sha256
             release-files/android/android.apk
             release-files/android/android.apk.sha256
+
 

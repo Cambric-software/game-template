@@ -1,5 +1,23 @@
 # Troubleshooting
 
+## Linux build fails on CI
+
+If the Linux build fails with a GStreamer or audio-related error, install the required audio libraries:
+
+```yaml
+- name: Install Linux build dependencies
+  run: |
+    sudo apt-get install -y \
+      clang cmake ninja-build pkg-config \
+      libgtk-3-dev liblzma-dev libstdc++-12-dev \
+      libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+      gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+```
+
+`audioplayers_linux` (pulled in by `flame_audio`) requires GStreamer on Ubuntu. All three CI workflow files (ci.yml, build.yml, release.yml) already include these packages.
+
+---
+
 ## `jni` 1.1.0 build failure
 
 **Symptom:** `flutter build windows` fails with:
