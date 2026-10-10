@@ -24,6 +24,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
@@ -44,6 +45,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
@@ -70,6 +72,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
@@ -105,6 +108,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
@@ -133,6 +137,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
@@ -150,3 +155,4 @@ jobs:
           name: windows-build
           path: game/build/windows/x64/runner/Release
           retention-days: 7
+

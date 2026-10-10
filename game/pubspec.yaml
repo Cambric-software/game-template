@@ -16,8 +16,9 @@ dependencies:
   flame: ^1.38.2
   flame_audio: ^2.12.2
 
-  # Explicit Windows audio plugin (works around audioplayers registration bug)
+  # Explicit platform audio plugins (works around audioplayers plugin registration bugs)
   audioplayers_windows: ^4.4.1
+  audioplayers_linux: ^4.3.0
 
   # ── Storage ──────────────────────────────────────────────────────────────
   path_provider: ^2.1.5
