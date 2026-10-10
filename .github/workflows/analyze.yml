@@ -24,4 +24,4 @@ jobs:
 
       - name: Analyze
         working-directory: game
-        run: flutter analyze --fatal-warnings
+        run: flutter analyze

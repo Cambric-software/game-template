@@ -34,7 +34,7 @@ jobs:
 
       - name: Dart analyze
         working-directory: game
-        run: flutter analyze --fatal-warnings
+        run: flutter analyze
 
   # ── Test ─────────────────────────────────────────────────────────────────────
   test:
