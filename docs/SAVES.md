@@ -47,19 +47,22 @@ Default slots defined in `SaveSlot`:
 | `slot_2` | Slot 2 | Manual save |
 | `slot_3` | Slot 3 | Manual save |
 
-The number of slots is configurable via the setup wizard.
+The template defines autosave plus three manual slots in
+`SaveSlot.defaultSlots`. Add slots there and update the save browser; the setup
+wizard records your choice in the manifest but does not edit Dart code.
 
 ---
 
 ## Save File Location
 
-Platform-dependent, resolved by `PlatformService`:
+The base is `getApplicationDocumentsDirectory()` from `path_provider`, then
+`Cambric/Games/<gameId>`. The `gameId` is the slug from `cambric.manifest.json`.
 
 | Platform | Location |
 |---|---|
-| Windows | `%APPDATA%\Cambric\Games\<gameId>\saves\` |
-| Android | App internal storage `files/Cambric/Games/<gameId>/saves/` |
-| Linux | `~/.local/share/Cambric/Games/<gameId>/saves/` |
+| Windows | `%USERPROFILE%\Documents\Cambric\Games\<gameId>\saves\` |
+| Android | App documents, e.g. `/data/user/0/<package>/app_flutter/Cambric/Games/<gameId>/saves/` |
+| Linux | `$XDG_DOCUMENTS_DIR/Cambric/Games/<gameId>/saves/` (usually `~/Documents`) |
 
 ---
 

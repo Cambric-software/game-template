@@ -7,8 +7,8 @@ on:
     - cron: "0 6 * * 1"  # Every Monday at 06:00 UTC
 
 jobs:
-  audit:
-    name: Dependency Audit
+  dependencies:
+    name: Dependency and Secret Check
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,11 @@ jobs:
         working-directory: game
         run: flutter pub get
 
-      # dart pub audit exits 1 if any advisory is found, including
-      # informational ones. We run it and surface the output without
-      # failing the pipeline for known-safe overrides (e.g. jni 1.0.3).
-      # Change continue-on-error to false once all overrides are removed.
-      - name: Audit dependencies
+      # Updates are reported, not enforced. Dart has no built-in advisory
+      # audit; use OSV-Scanner or a similar tool if you need CVE matching.
+      - name: Report outdated dependencies
         working-directory: game
-        run: dart pub audit
+        run: dart pub outdated --no-dev-dependencies
         continue-on-error: true
 
       - name: Check for hardcoded secrets in Dart source

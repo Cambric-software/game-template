@@ -42,11 +42,15 @@ class AutosaveService {
     );
   }
 
-  void startSession() {
+  void startSession({int initialPlaytimeSeconds = 0}) {
     _sessionActive = true;
     _sessionStarted = DateTime.now();
     _secondsSinceLastSave = 0;
-    _log.info('Autosave session started');
+    _playtimeSeconds = initialPlaytimeSeconds;
+    _log.info(
+      'Autosave session started '
+      '(playtime: ${_playtimeSeconds}s)',
+    );
   }
 
   void stopSession() {

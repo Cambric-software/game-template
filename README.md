@@ -2,93 +2,89 @@
 
 [![CI](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Cambric-software/game-template/actions/workflows/ci.yml)
 
-A reusable game foundation for Android, Windows, and Linux.  
-Built with Flutter and Flame. Maintained by [Cambric](https://cambric.dev).
+A genre-agnostic 2D game foundation for Android, Windows, and Linux. Flutter
+owns menus, settings, saves, and accessibility; Flame owns the game canvas.
+Maintained by [Cambric](https://cambric.dev).
 
-Supports any game genre: 2D platformer, 3D, top-down, puzzle, RPG, arcade, strategy, racing, horror, shooter, simulation, card/board, and custom.
-
----
-
-## Platforms
-
-| Platform | Build | Notes |
-|---|---|---|
-| Windows x64 | ✅ | Visual Studio 2022 required |
-| Android APK/AAB | ✅ | Android SDK + Java 17 required |
-| Linux x64 | ✅ CI | No local Linux toolchain needed — builds in GitHub Actions |
+The template is a complete starting product, not a folder of helpers. Launch it
+and you get a main menu, save browser, settings screen, pause menu, dark and
+light themes, and English/Arabic layout with RTL support.
 
 ---
 
 ## Quick Start
 
-**Requirements:** Flutter 3.47+, Dart 3.13+, Git
+**Requirements:** Flutter 3.47.2+, Dart 3.13.2+, Git
 
 ```bash
 git clone https://github.com/Cambric-software/game-template my-game
 cd my-game
 
-# Configure your game — genre, platforms, input, physics, multiplayer, DLC, monetization
 dart run scripts/cambric_setup.dart
-
-# Verify your environment
 dart run scripts/cambric.dart doctor
-
-# Run the game
 dart run scripts/cambric.dart run
 ```
 
-After building a release, use the install wizard:
-
-```bash
-# Windows
-dart run scripts/cambric.dart install windows
-
-# Android (requires connected device)
-dart run scripts/cambric.dart install android
-
-# Linux — shows CI download + install instructions
-dart run scripts/cambric.dart install linux
-```
+The setup wizard records your game identity and chosen features in
+`cambric.manifest.json`. It does not rewrite gameplay code or delete files.
 
 ---
 
 ## What You Get
 
-| Feature | Status |
+| Area | Included |
 |---|---|
-| Game loop (Flame, delta time, pause) | ✅ |
-| Scene system (load, transition, dispose) | ✅ |
-| Entity system (tags, components, lifecycle) | ✅ |
-| MovementSystem (auto-integrates PhysicsBodyComponent) | ✅ |
-| SpawnSystem / DespawnSystem | ✅ |
-| Input (keyboard, mouse, touch, gamepad abstraction) | ✅ |
-| Touch input wiring (tap/drag → InputAction, Android) | ✅ |
-| Audio (music, SFX, volume, mute, pause-aware) | ✅ |
-| Save system (slots, autosave, atomic writes, migration) | ✅ |
-| Settings (persisted player preferences) | ✅ |
-| Localization (English + Arabic, RTL) | ✅ |
-| Debug overlay (FPS, scene, entities, input — dev only) | ✅ |
-| Update system (GitHub Release discovery, verify) | ✅ |
-| Setup wizard (genre, physics, multiplayer, DLC, monetization) | ✅ |
-| Install wizard (Windows, Android, Linux) | ✅ |
-| Developer CLI (13 commands) | ✅ |
-| CI/CD (analyze, test, build, security, release) | ✅ |
-| Documentation | ✅ |
+| UI shell | Main menu, save browser, settings, pause overlay, quit confirmation |
+| Theme | One dark/light palette, shared tokens, dark by default, persisted choice |
+| Localization | English and Arabic strings, RTL layout, persisted language |
+| Game loop | Flame `FlameGame`, fixed update flow, pause/resume, lifecycle handling |
+| Scenes | Named scene manager with load/activate/deactivate/dispose hooks |
+| Entities | `GameEntity` with IDs, tags, component data, and lifecycle hooks |
+| Input | Keyboard, mouse, touch, gamepad abstraction, persisted bindings |
+| Audio | Music and SFX through one wrapper, volume/mute, pause-aware |
+| Saves | Four slots, autosave, atomic writes, checksum, backup, migration |
+| Settings | Volume, mute, reduced motion, theme, language, reset |
+| Debug | FPS/scene/input overlay and hitbox visualiser in debug builds only |
+| Release | CI for analyze, test, Android, Linux, Windows, security, tagged releases |
+
+The demo scene is intentionally small. Replace `lib/gameplay/` with your game
+and keep the shell.
 
 ---
 
-## Architecture
+## Project Layout
 
 ```
-Game Content   (lib/gameplay/)   ← your game — replaceable
-Game Runtime   (lib/game/)       ← Flame wrappers
-Cambric Core   (lib/core/)       ← infrastructure, no Flame dependency
-Flutter/Flame                    ← platform
+game-template/
+├── .github/workflows/   CI, release, and security
+├── docs/                Architecture, design, development, builds, saves
+├── game/
+│   ├── lib/core/        Cambric infrastructure (no Flame dependency)
+│   ├── lib/game/        Game runtime and Flame wrappers
+│   ├── lib/gameplay/    Demo scenes and entities - replace this
+│   ├── lib/ui/          Menu, settings, saves, pause, theme, widgets
+│   ├── lib/save/        Save format, storage, autosave, migration
+│   ├── test/            Unit and widget tests
+│   ├── assets/          Manifest and English/Arabic strings
+│   └── tools/           Platform install helpers
+├── scripts/             Setup, install, and developer CLI
+└── cambric.manifest.json
 ```
 
-Game code never calls operating-system APIs directly.  
-Cambric infrastructure never depends on Flame.  
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
+---
+
+## UI Kit
+
+Every game uses the same interface as the rest of Cambric:
+
+- Opaque surface cards, hairline borders, accent used sparingly.
+- Card radius 14, button 11, chip 6, input 8.
+- 48 px minimum touch targets.
+- One palette file; no one-off colours in screens.
+- Flutter menus above a persistent Flame canvas, never canvas-drawn text.
+
+Read [docs/DESIGN.md](docs/DESIGN.md) before adding a screen. It documents the
+tokens, components, layout rules, and accessibility requirements.
 
 ---
 
@@ -96,40 +92,32 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ```bash
 dart run scripts/cambric.dart doctor           # environment check
-dart run scripts/cambric.dart setup            # run the setup wizard
+dart run scripts/cambric.dart setup            # setup wizard
+dart run scripts/cambric.dart run              # run on Windows
+dart run scripts/cambric.dart run android      # run on a device
+dart run scripts/cambric.dart test             # unit and widget tests
+dart run scripts/cambric.dart build windows    # release build
 dart run scripts/cambric.dart install windows  # install wizard
-dart run scripts/cambric.dart build windows    # Windows release build
-dart run scripts/cambric.dart build android    # Android APK
-dart run scripts/cambric.dart test             # run all tests
 dart run scripts/cambric.dart diagnose         # diagnostic report
 dart run scripts/cambric.dart release 1.0.0    # bump version
-dart run scripts/cambric.dart update check     # check for updates
+dart run scripts/cambric.dart update check     # check GitHub releases
 ```
 
-See [scripts/README.md](scripts/README.md) for all commands.
+The CLI has 17 commands covering setup, install, build, assets, saves, scenes,
+entities, changelog, and updates. Run `dart run scripts/cambric.dart --help`.
 
 ---
 
-## Project Structure
+## Testing
 
+```bash
+cd game
+flutter analyze lib test
+flutter test
 ```
-game-template/
-├── .github/workflows/    CI/CD pipelines
-├── docs/                 Full documentation
-├── scripts/              Developer CLI + setup wizard + install wizard
-├── .template/            Wizard defaults, distribution guides
-├── game/                 Flutter + Flame project
-│   ├── lib/core/         Cambric infrastructure
-│   ├── lib/game/         Game runtime (wraps Flame)
-│   ├── lib/gameplay/     Template content — replace this
-│   ├── lib/save/         Save system
-│   ├── lib/settings/     Player settings
-│   ├── lib/ui/           Flutter app widget
-│   ├── test/             89 passing unit tests
-│   ├── tools/            Platform install helpers
-│   └── assets/           i18n, images, sprites, audio, fonts
-└── cambric.manifest.json Game identity
-```
+
+Widget tests cover the menu, save browser, settings, theme, and Arabic layout.
+Save tests use a temporary directory so they never touch player data.
 
 ---
 
@@ -137,13 +125,13 @@ game-template/
 
 | Document | Description |
 |---|---|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and layer boundaries |
-| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Setup and first steps |
-| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Development workflow |
-| [SAVES.md](docs/SAVES.md) | Save system internals |
-| [BUILDING.md](docs/BUILDING.md) | Platform build instructions |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Known issues and fixes |
-| [SECURITY.md](SECURITY.md) | Security policy |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Runtime layers, boot order, scenes, saves |
+| [DESIGN.md](docs/DESIGN.md) | Palette, tokens, components, screen rules |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Everyday workflow and extension points |
+| [SAVES.md](docs/SAVES.md) | Save format, slots, migration, corruption handling |
+| [BUILDING.md](docs/BUILDING.md) | Windows, Android, Linux, and release builds |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Known failures and fixes |
+| [SECURITY.md](SECURITY.md) | Security policy and data handling |
 
 ---
 
@@ -151,13 +139,10 @@ game-template/
 
 - Flutter 3.47.2+ (stable channel)
 - Dart 3.13.2+
-- Windows builds: Visual Studio 2022 with C++ workload
-- Android builds: Android SDK 36+, Java 17+
-- Linux builds: GitHub Actions `ubuntu-latest` (or WSL2)
-
----
+- Windows: Visual Studio 2022 with the C++ desktop workload
+- Android: Android SDK 36+ and Java 17+
+- Linux: a Linux host or the `ubuntu-latest` CI runner
 
 ## License
 
-MIT — see [LICENSE](LICENSE).  
-Copyright © 2026 Cambric.
+MIT - see [LICENSE](LICENSE). Copyright 2026 Cambric.

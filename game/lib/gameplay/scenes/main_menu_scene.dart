@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/identity/game_identity.dart';
 import '../../game/input/input_action.dart';
 import '../../game/scenes/cambric_scene.dart';
+import '../../ui/theme/game_palette.dart';
 
 /// Template main menu scene.
 ///
@@ -26,11 +27,10 @@ class MainMenuScene extends CambricScene {
     _title = TextComponent(
       text: GameIdentity.name,
       textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Color(0xFFFFFFFF),
+        style: TextStyle(
+          color: GamePalette.dark.text,
           fontSize: 36,
           fontWeight: FontWeight.bold,
-          shadows: [Shadow(color: Color(0xFF000000), blurRadius: 4)],
         ),
       ),
       anchor: Anchor.center,
@@ -39,7 +39,10 @@ class MainMenuScene extends CambricScene {
     _startPrompt = TextComponent(
       text: 'Press ENTER or SPACE to Start',
       textRenderer: TextPaint(
-        style: const TextStyle(color: Color(0xFFCCCCCC), fontSize: 18),
+        style: TextStyle(
+          color: GamePalette.dark.secondary,
+          fontSize: 18,
+        ),
       ),
       anchor: Anchor.center,
     );
@@ -47,7 +50,10 @@ class MainMenuScene extends CambricScene {
     _version = TextComponent(
       text: GameIdentity.displayVersion,
       textRenderer: TextPaint(
-        style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+        style: TextStyle(
+          color: GamePalette.dark.muted,
+          fontSize: 12,
+        ),
       ),
     );
 

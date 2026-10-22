@@ -16,22 +16,31 @@ The template contains no:
 - Hidden network calls
 
 Network activity is limited to:
-- GitHub Releases API for update checks (opt-in via `FeatureFlags.updateChecks`)
+- GitHub Releases API when your game calls `UpdateService.checkForUpdate()`
+  (disabled by default; enable with `FeatureFlags.updateChecks`)
 - Any network features your specific game adds
+
+The template never starts a network request on its own.
 
 ### Save file integrity
 
 Every save is protected by a SHA-256 checksum. On load:
-1. The checksum is verified before any data is read
+1. The checksum is verified before any data is used
 2. If the primary save is corrupt, the backup is tried automatically
 3. A failed checksum triggers a diagnostic log entry, not a silent failure
 
-### Update verification
+### Update checks
 
-Before installing any update:
-1. The downloaded artifact's SHA-256 checksum is verified against the release metadata
-2. A backup of the current installation is created before extraction
-3. On verification failure, the update is rejected and the current installation is preserved
+`UpdateService` only checks GitHub Releases for a newer version and returns a
+release URL. It does not download or install anything.
+
+If you add an installer, you own its safety:
+1. Download over HTTPS and verify the artifact's SHA-256 against the release
+   metadata before extracting it
+2. Back up the current installation first
+3. Reject the update and keep the current installation if verification fails
+
+The release workflow publishes `.sha256` files for this purpose.
 
 ### Safe file operations
 
@@ -44,14 +53,20 @@ No user data file is overwritten in-place.
 
 ### Path validation
 
-All file paths provided by players or derived from save data are validated:
+Save slots are fixed identifiers, not player-supplied paths, so the save system
+never builds a path from arbitrary input.
+
+If your game accepts a filename or path from a player, validate it at the
+boundary with `SecurityService.isPathSafe` and `sanitizeFilename`:
 - No directory traversal (`..`)
 - No null bytes
 - No absolute paths outside the game data directory
 
 ### Dependency security
 
-Dependencies are audited in CI via `dart pub audit`. The security workflow runs weekly and on every push.
+The security workflow reports outdated dependencies and scans source for
+hardcoded secrets on every push and weekly. Dart has no built-in CVE audit;
+add OSV-Scanner or your registry's audit tool if you need advisory matching.
 
 ### Secret handling
 

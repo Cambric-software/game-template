@@ -25,7 +25,7 @@ dependencies:
   shared_preferences: ^2.5.3
 
   # ── Localization ─────────────────────────────────────────────────────────
-  intl: ^0.20.3
+  # Locale JSON is parsed directly; add intl when you need date/number formats.
 
   # ── Networking ───────────────────────────────────────────────────────────
   http: ^1.6.0
@@ -36,7 +36,6 @@ dependencies:
   # ── Utilities ────────────────────────────────────────────────────────────
   logging: ^1.3.0
   uuid: ^4.5.3
-  archive: ^4.0.9
 
 dev_dependencies:
   flutter_test:
@@ -59,8 +58,3 @@ flutter:
     - assets/cambric.manifest.json
     - assets/i18n/en.json
     - assets/i18n/ar.json
-    - assets/images/
-    - assets/sprites/
-    - assets/audio/music/
-    - assets/audio/sfx/
-    - assets/fonts/

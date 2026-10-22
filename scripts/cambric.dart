@@ -106,11 +106,8 @@ Future<void> _doctor() async {
   // Asset directories
   for (final dir in [
     'game/assets/i18n',
-    'game/assets/images',
-    'game/assets/audio/music',
-    'game/assets/audio/sfx',
   ]) {
-    _check('assets/$dir', Directory(dir).existsSync(), dir);
+    _check(dir, Directory(dir).existsSync(), dir);
   }
 
   // Template version check via GitHub
@@ -142,12 +139,6 @@ Future<void> _setup() async {
   final result = await _run2('dart', ['run', 'scripts/cambric_setup.dart']);
   stdout.write(result.stdout);
   stderr.write(result.stderr);
-  exit(result.exitCode);
-}
-
-Future<void> _install(List<String> args) async {
-  final dartArgs = ['run', 'scripts/cambric_install.dart', ...args];
-  final result = await _run2('dart', dartArgs, inheritStdio: true);
   exit(result.exitCode);
 }
 
@@ -304,18 +295,17 @@ Future<void> _save(List<String> args) async {
       exit(1);
     }
 
-    // Compute SHA-256
-    final bytes = dataJson.codeUnits;
-    // Simple checksum verification
+    // A SHA-256 implementation is not bundled with this CLI. The game
+    // verifies the checksum on load; here we only validate the envelope.
     print('  ✓ Envelope structure: valid');
-    print('  ✓ Checksum field: present ($storedChecksum)');
+    print('  ✓ Checksum field: present (verified by the game on load)');
 
     final data = jsonDecode(dataJson) as Map<String, dynamic>;
     print('  ✓ Data JSON: valid');
     print('    saveVersion: ${data['saveVersion']}');
     print('    slotId:      ${data['slotId']}');
     print('    updatedAt:   ${data['updatedAt']}');
-    print('\n✓ Save file appears valid.');
+    print('\n✓ Envelope parsed. The game verifies the checksum when loading.');
   } catch (e) {
     print('✗ Invalid save file: $e');
     exit(1);
@@ -495,6 +485,7 @@ Future<_RunResult> _run2(
       args,
       workingDirectory: workingDir,
       mode: ProcessStartMode.inheritStdio,
+      runInShell: Platform.isWindows,
     );
     final exitCode = await process.exitCode;
     return _RunResult(exitCode: exitCode, stdout: '', stderr: '');
@@ -504,9 +495,10 @@ Future<_RunResult> _run2(
     executable,
     args,
     workingDirectory: workingDir,
+    runInShell: Platform.isWindows,
   );
   return _RunResult(
-    exitCode: result.exitCode as int,
+    exitCode: result.exitCode,
     stdout: result.stdout as String,
     stderr: result.stderr as String,
   );
@@ -646,7 +638,11 @@ Future<void> _generateScene(List<String> args) async {
     exit(1);
   }
 
-  final name     = args.first;
+  final name = args.first;
+  if (!_isValidTypeName(name)) {
+    print('Scene name must be PascalCase, e.g. LevelOne.');
+    exit(1);
+  }
   final fileName = _toSnakeCase(name);
   final filePath = 'game/lib/gameplay/scenes/${fileName}_scene.dart';
 
@@ -656,14 +652,11 @@ Future<void> _generateScene(List<String> args) async {
   }
 
   final content = '''import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
 
 import '../../game/input/input_action.dart';
 import '../../game/scenes/cambric_scene.dart';
 import '../../game/systems/movement_system.dart';
 import '../../game/systems/spawn_system.dart';
-import '../../game/systems/despawn_system.dart';
-import '../../game/camera/game_camera.dart';
 
 /// $name scene.
 ///
@@ -677,19 +670,14 @@ class ${name}Scene extends CambricScene {
 
   late final MovementSystem _movement;
   late final SpawnSystem _spawner;
-  late final DespawnSystem _despawner;
-  late final GameCamera _camera;
 
   @override
   Future<void> onSceneLoad() async {
-    _movement  = MovementSystem();
-    _spawner   = SpawnSystem();
-    _despawner = DespawnSystem();
-    _camera    = GameCamera();
+    _movement = MovementSystem();
+    _spawner = SpawnSystem();
 
     add(_movement);
     add(_spawner);
-    add(_despawner);
 
     // TODO: Register spawn points
     // _spawner.addPoint(SpawnPoint(id: \'player_start\', position: Vector2(100, 200)));
@@ -743,7 +731,11 @@ Future<void> _generateEntity(List<String> args) async {
     exit(1);
   }
 
-  final name     = args.first;
+  final name = args.first;
+  if (!_isValidTypeName(name)) {
+    print('Entity name must be PascalCase, e.g. Player.');
+    exit(1);
+  }
   final fileName = _toSnakeCase(name);
   final filePath = 'game/lib/gameplay/entities/${fileName}_entity.dart';
 
@@ -752,13 +744,18 @@ Future<void> _generateEntity(List<String> args) async {
     exit(1);
   }
 
+  final directory = Directory('game/lib/gameplay/entities');
+  if (!directory.existsSync()) {
+    directory.createSync(recursive: true);
+  }
+
   final content = '''import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../game/components/health_component.dart';
 import '../../game/entities/game_entity.dart';
-import '../../game/input/input_action.dart';
 import '../../game/physics/physics_body_component.dart';
+import '../../ui/theme/game_palette.dart';
 
 /// $name entity.
 ///
@@ -786,8 +783,7 @@ class ${name}Entity extends GameEntity {
     setComponent(\'health\', health);
     setComponent(\'body\', body);
 
-    // TODO: Load sprite/animation
-    // final sprite = await gameRef.loadSprite(\'sprites/${fileName}.png\');
+    // TODO: Load a sprite or animation with Flame's asset APIs.
   }
 
   @override
@@ -804,15 +800,20 @@ class ${name}Entity extends GameEntity {
   void update(double dt) {
     super.update(dt);
     // TODO: Read InputState or AI logic
-    // final input = BootstrapService.saveService; // access via your service locator
     body.integrate(position, dt);
   }
 
   @override
   void render(Canvas canvas) {
-    // Placeholder: green rectangle
-    final paint = Paint()..color = const Color(0xFF4CAF50);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.x, size.y), paint);
+    // Placeholder: shared primary fill with an accent outline.
+    final fill = Paint()..color = GamePalette.dark.primary;
+    final outline = Paint()
+      ..color = GamePalette.dark.accent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final rect = Rect.fromLTWH(0, 0, size.x, size.y);
+    canvas.drawRect(rect, fill);
+    canvas.drawRect(rect, outline);
   }
 
   void _onDeath() {
@@ -859,6 +860,9 @@ String _toSnakeCase(String name) {
       .replaceAllMapped(RegExp(r'[A-Z]'), (m) => '_${m[0]!.toLowerCase()}')
       .replaceFirst(RegExp(r'^_'), '');
 }
+
+bool _isValidTypeName(String name) =>
+    RegExp(r'^[A-Z][A-Za-z0-9]*$').hasMatch(name);
 
 String _toLowerCamel(String name) {
   if (name.isEmpty) return name;

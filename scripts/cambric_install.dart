@@ -91,7 +91,14 @@ Future<void> _installWindows(String gameName) async {
 
         if (Platform.isWindows && _yesNo('Create desktop shortcut?')) {
           // PowerShell one-liner for shortcut
-          final exeName = '${gameName.replaceAll(' ', '')}.exe';
+          final exes = Directory(buildPath)
+              .listSync()
+              .whereType<File>()
+              .where((f) => f.path.toLowerCase().endsWith('.exe'))
+              .toList();
+          final exeName = exes.isNotEmpty
+              ? exes.first.uri.pathSegments.last
+              : 'cambric_game.exe';
           final ps = [
             '\$ws=New-Object -ComObject WScript.Shell',
             '\$sc=\$ws.CreateShortcut("\$env:USERPROFILE\\Desktop\\$gameName.lnk")',
@@ -112,22 +119,31 @@ Future<void> _installWindows(String gameName) async {
       final zipName = '${_toSnake(gameName)}-windows.zip';
       if (Platform.isWindows) {
         final ps = 'Compress-Archive -Path "$buildPath\\*" -DestinationPath "$zipName" -Force';
-        await Process.run('powershell', ['-Command', ps]);
-        // Compute checksum
-        final bytes = await File(zipName).readAsBytes();
-        final hash = _sha256Hex(bytes);
-        await File('$zipName.sha256').writeAsString('$hash  $zipName\n');
-        print('  ✓ ZIP: $zipName');
-        print('  ✓ Checksum: $zipName.sha256');
+        final result = await Process.run('powershell', ['-Command', ps]);
+        if (result.exitCode != 0) {
+          print('  ✗ ZIP creation failed: ${result.stderr}');
+          exit(1);
+        }
       } else {
-        // On Linux/macOS use zip CLI
-        await Process.run('zip', ['-r', zipName, '.'], workingDirectory: buildPath);
-        final bytes = await File(zipName).readAsBytes();
-        final hash = _sha256Hex(bytes);
-        await File('$zipName.sha256').writeAsString('$hash  $zipName\n');
-        print('  ✓ ZIP: $zipName');
-        print('  ✓ Checksum: $zipName.sha256');
+        final result = await Process.run(
+          'zip',
+          ['-r', zipName, '.'],
+          workingDirectory: buildPath,
+        );
+        if (result.exitCode != 0) {
+          print('  ✗ ZIP creation failed: ${result.stderr}');
+          exit(1);
+        }
       }
+      final hash = await _sha256Hex(File(zipName));
+      if (hash == null) {
+        print('  ✗ Could not compute SHA-256 for $zipName.');
+        print('    Install certutil (Windows) or sha256sum (Linux/macOS) and retry.');
+        exit(1);
+      }
+      await File('$zipName.sha256').writeAsString('$hash  $zipName\n');
+      print('  ✓ ZIP: $zipName');
+      print('  ✓ Checksum: $zipName.sha256');
 
     default:
       // Find exe
@@ -177,8 +193,12 @@ Future<void> _installAndroid(String gameName) async {
     case 'Copy APK with SHA-256 checksum':
       final destName = '${_toSnake(gameName)}-android.apk';
       await File(apkPath).copy(destName);
-      final bytes = await File(destName).readAsBytes();
-      final hash = _sha256Hex(bytes);
+      final hash = await _sha256Hex(File(destName));
+      if (hash == null) {
+        print('  ✗ Could not compute SHA-256 for $destName.');
+        print('    Install certutil (Windows) or sha256sum (Linux/macOS) and retry.');
+        exit(1);
+      }
       await File('$destName.sha256').writeAsString('$hash  $destName\n');
       print('  ✓ APK: $destName');
       print('  ✓ Checksum: $destName.sha256');
@@ -252,8 +272,30 @@ Future<void> _copyDirectory(String src, String dest) async {
   }
 }
 
-String _sha256Hex(List<int> bytes) {
-  // Simple SHA-256 using dart:crypto not available in plain Dart without packages.
-  // We call the system sha256sum / certutil instead.
-  return 'run-sha256sum-on-artifact';
+Future<String?> _sha256Hex(File file) async {
+  try {
+    final result = Platform.isWindows
+        ? await Process.run('certutil', ['-hashfile', file.path, 'SHA256'])
+        : await Process.run('sha256sum', [file.path]);
+    if (result.exitCode != 0) return null;
+
+    final output = result.stdout as String;
+    for (final line in output.split(RegExp(r'\r?\n'))) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+
+      // sha256sum: "<hash>  <path>"; certutil: "<hash with spaces>".
+      final firstToken = trimmed.split(RegExp(r'\s+')).first.toLowerCase();
+      if (RegExp(r'^[0-9a-f]{64}$').hasMatch(firstToken)) {
+        return firstToken;
+      }
+      final joined = trimmed.replaceAll(RegExp(r'\s'), '').toLowerCase();
+      if (RegExp(r'^[0-9a-f]{64}$').hasMatch(joined)) {
+        return joined;
+      }
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
 }

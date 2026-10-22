@@ -14,7 +14,7 @@ If the Linux build fails with a GStreamer or audio-related error, install the re
       gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
 ```
 
-`audioplayers_linux` (pulled in by `flame_audio`) requires GStreamer on Ubuntu. All three CI workflow files (ci.yml, build.yml, release.yml) already include these packages.
+`audioplayers_linux` (pulled in by `flame_audio`) requires GStreamer on Ubuntu. Both `ci.yml` and `release.yml` already include these packages.
 
 ---
 
@@ -84,7 +84,7 @@ Accept all licenses. Then run `flutter doctor` to confirm the Android toolchain 
 
 ## Linux build on Windows host
 
-Linux builds are not supported on Windows. Use GitHub Actions (`ubuntu-latest`). The `.github/workflows/build.yml` workflow handles Linux builds automatically on push to `main`.
+Linux builds are not supported on Windows. Use GitHub Actions (`ubuntu-latest`). The `ci.yml` workflow builds Linux automatically on push and pull request.
 
 ---
 
@@ -102,10 +102,8 @@ Linux builds are not supported on Windows. Use GitHub Actions (`ubuntu-latest`).
 
 If `SaveService.load()` returns `SaveResult.corrupt`:
 
-If `SaveService.load()` returns `SaveResult.corrupt`:
-
 1. The `.sav.bak` backup was also unreadable
-2. Check `logs/` directory for diagnostic entries
+2. Check the console output or run `dart run scripts/cambric.dart diagnose`
 3. Run `dart run scripts/cambric.dart save validate <path>` to inspect the file
 4. Do NOT manually edit `.sav` files — the checksum will no longer match
 
@@ -113,13 +111,20 @@ To reset a slot: call `SaveService.deleteSave(slot)` from the game's settings/de
 
 ---
 
-## Update check network errors
+## Game update check network errors
 
-If `cambric update check` fails with a network error:
+`UpdateService.checkForUpdate()` is non-fatal: a network failure returns an
+error result and the game keeps running.
 
-1. The update check is non-fatal — the game continues normally
-2. Check your internet connection
-3. If the repository field in `cambric.manifest.json` is empty, update check is disabled
+1. Update checks are disabled by default. Set `FeatureFlags.updateChecks = true`
+   before calling the service.
+2. The `repository` field in `cambric.manifest.json` must name a GitHub repo,
+   for example `Cambric-software/my-game`.
+3. The GitHub API is rate-limited for unauthenticated requests. Cache the last
+   good result instead of checking on every launch.
+
+The template does not download or install updates. See `SECURITY.md` before
+adding an installer.
 
 ---
 
@@ -148,3 +153,16 @@ flutter build windows --debug    # explicit debug build
 ```
 
 Press F1 to cycle the overlay between hidden / minimal / full.
+
+---
+
+## `flutter test` hangs or fails on `build/unit_test_assets`
+
+**Symptom:** the test run stalls with no output, or fails while deleting
+`game/build/unit_test_assets`.
+
+**Cause:** another Flutter process (an IDE, a running app, or a previous test
+run) still holds the directory.
+
+**Fix:** close the other process, wait a few seconds, delete `game/build/`, then
+run `flutter test` again. The test runner recreates the asset bundle.

@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:ui' show Color;
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/services.dart' show LogicalKeyboardKey, KeyEvent,
-    KeyDownEvent, KeyUpEvent;
+import 'package:flutter/services.dart'
+    show LogicalKeyboardKey, KeyEvent, KeyDownEvent, KeyUpEvent;
 import 'package:flutter/widgets.dart' show KeyEventResult;
 
 import '../../core/features/feature_flags.dart';
@@ -22,7 +25,12 @@ final _log = gameLogger('CambricGame');
 /// Uses [HasKeyboardHandlerComponents] for keyboard input routing.
 /// Game content is registered externally via BootstrapService.
 class CambricGame extends FlameGame with HasKeyboardHandlerComponents {
-  CambricGame({GameClock? clock}) : _clock = clock ?? RealGameClock();
+  CambricGame({GameClock? clock}) : _clock = clock ?? RealGameClock() {
+    // Scenes are registered by BootstrapService before the widget mounts,
+    // so the manager must exist before onLoad, not inside it.
+    sceneManager = SceneManager(game: this);
+    audioSystem = AudioSystem();
+  }
 
   final GameClock _clock;
   final GameStateManager stateManager = GameStateManager();
@@ -32,12 +40,21 @@ class CambricGame extends FlameGame with HasKeyboardHandlerComponents {
   late final AudioSystem audioSystem;
   DebugOverlay? _debugOverlay;
 
+  final Completer<void> _ready = Completer<void>();
+
+  /// Completes after Flame finishes loading the game. Bootstrap waits for
+  /// this before adding a scene, so a fast tap on "New game" cannot race
+  /// the first frame.
+  Future<void> get whenLoaded => _ready.future;
+
+  /// Called once per frame while a session is playing. Bootstrap wires this
+  /// to autosave so save timing lives in one place.
+  void Function(double dt)? onPlayingTick;
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    sceneManager = SceneManager(game: this);
-    audioSystem = AudioSystem();
     await audioSystem.initialize();
 
     if (FeatureFlags.debugOverlay) {
@@ -50,8 +67,12 @@ class CambricGame extends FlameGame with HasKeyboardHandlerComponents {
       add(_debugOverlay!);
     }
 
+    if (!_ready.isCompleted) _ready.complete();
     _log.info('CambricGame loaded');
   }
+
+  @override
+  Color backgroundColor() => const Color(0xFF0E1116);
 
   @override
   KeyEventResult onKeyEvent(
@@ -88,27 +109,54 @@ class CambricGame extends FlameGame with HasKeyboardHandlerComponents {
 
   void _togglePause() {
     if (stateManager.isPlaying) {
-      stateManager.transition(GameState.paused);
-      _clock.pause();
-      audioSystem.onGamePaused();
-      overlays.add('pause_menu');
+      pause();
     } else if (stateManager.isPaused) {
-      stateManager.transition(GameState.playing);
-      _clock.resume();
-      audioSystem.onGameResumed();
-      overlays.remove('pause_menu');
+      resume();
     }
+  }
+
+  /// Pause a live session and show the pause menu. Safe to call twice.
+  void pause() {
+    if (!stateManager.isPlaying) return;
+    stateManager.transition(GameState.paused);
+    _clock.pause();
+    audioSystem.onGamePaused();
+    overlays.add('pause_menu');
+  }
+
+  /// Resume a paused session. Safe to call twice.
+  void resume() {
+    if (!stateManager.isPaused) return;
+    stateManager.transition(GameState.playing);
+    leavePause();
+  }
+
+  /// Release pause presentation without changing the state.
+  ///
+  /// Used when leaving a paused session for the main menu, where the next
+  /// state is [GameState.mainMenu] rather than [GameState.playing].
+  void leavePause() {
+    _clock.resume();
+    audioSystem.onGameResumed();
+    overlays.remove('pause_menu');
   }
 
   @override
   void update(double dt) {
-    super.update(dt);
-    _clock.tick(dt);
-
     if (stateManager.isPaused) {
+      // The world must not advance while the pause menu is open. Overlays are
+      // Flutter widgets, but the debug overlay is a Flame component, so give
+      // it a tick and clear input edges.
       _debugOverlay?.update(dt);
       inputState.endFrame();
       return;
+    }
+
+    _clock.tick(dt);
+    super.update(dt);
+
+    if (stateManager.isPlaying) {
+      onPlayingTick?.call(dt);
     }
 
     sceneManager.update(dt);

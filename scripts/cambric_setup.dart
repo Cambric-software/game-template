@@ -67,9 +67,6 @@ void main() async {
       '2D Platformer',
       '2D Top-Down',
       '2D Side-Scroller',
-      '3D First-Person',
-      '3D Third-Person',
-      '3D Open World',
       'Puzzle',
       'Strategy / Tower Defense',
       'RPG / Adventure',
@@ -85,12 +82,7 @@ void main() async {
   );
 
   final gameType = _genreToType(gameGenre);
-
-  final dimension = _choose(
-    'Game dimension',
-    options: ['2D', '3D', 'Both (2D UI + 3D world)'],
-    defaultIndex: gameGenre.startsWith('3D') ? 1 : 0,
-  );
+  const dimension = '2D';
 
   // ── SECTION 3: Platforms ──────────────────────────────────────────────────
   print('\n═══ Target Platforms ═════════════════════════════');
@@ -287,7 +279,7 @@ void main() async {
     'locales':          locales,
     'gameType':         gameType,
     'gameGenre':        gameGenre,
-    'gameDimension':    dimension.startsWith('3D') ? '3d' : '2d',
+    'gameDimension':    '2d',
     'orientation':      orientation,
     'targetFps':        targetFps.startsWith('30') ? 30 : targetFps.startsWith('120') ? 120 : 60,
     'physics':          physicsType.startsWith('Full') ? 'box2d' : physicsType.startsWith('No') ? 'none' : 'simple',
@@ -327,20 +319,16 @@ void main() async {
 
   // Notes
   print('');
-  if (dimension.startsWith('3D') || dimension.contains('3D')) {
-    print('⚠  3D games: Add a 3D renderer to game/pubspec.yaml.');
-    print('   Options: flutter_scene, three_dart, or custom OpenGL/Vulkan binding.');
-  }
   if (physicsType.startsWith('Full')) {
     print('⚠  Full physics: run: cd game && flutter pub add flame_forge2d');
   }
   if (multiplayerType.contains('Online')) {
     print('⚠  Online multiplayer is an architecture placeholder.');
-    print('   You will need a backend. Add networking in lib/services/.');
+    print('   You will need a backend and networking code under lib/core/.');
   }
   if (dlcSupport) {
-    print('⚠  DLC: The DownloadService architecture is reserved in lib/core/updates/.');
-    print('   Implement content manifest + signed download verification before shipping.');
+    print('⚠  DLC: No downloader or installer is included.');
+    print('   Read SECURITY.md before adding signed downloads.');
   }
 
   print('');
@@ -436,7 +424,6 @@ String _genreToType(String genre) {
   if (genre.startsWith('2D Platformer'))   return 'platformer';
   if (genre.startsWith('2D Top-Down'))     return 'topdown';
   if (genre.startsWith('2D Side'))         return '2d';
-  if (genre.startsWith('3D'))              return '3d';
   if (genre.startsWith('Puzzle'))          return 'puzzle';
   if (genre.startsWith('RPG'))             return 'rpg';
   if (genre.startsWith('Arcade'))          return 'arcade';
