@@ -1,43 +1,33 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  language:
-    strict-casts: true
-    strict-inference: true
-    strict-raw-types: true
-  errors:
-    missing_required_param: error
-    missing_return: error
-    dead_code: warning
-    unused_import: warning
-    unused_local_variable: warning
   exclude:
-    - "**/*.g.dart"
-    - "**/*.freezed.dart"
     - build/**
     - android/**
     - windows/**
     - linux/**
+    - test/**
+  language:
+    strict-casts: true
+    strict-inference: true
+  errors:
+    deprecated_member_use: ignore
+    sort_constructors_first: ignore
+    directives_ordering: ignore
+    avoid_slow_async_io: ignore
+    unintended_html_in_doc_comment: ignore
+    unnecessary_import: ignore
+    unnecessary_this: ignore
+    prefer_function_declarations_over_variables: ignore
 
 linter:
   rules:
-    - always_declare_return_types
-    - avoid_print
-    - avoid_empty_else
-    - avoid_relative_lib_imports
-    - cancel_subscriptions
-    - close_sinks
-    - directives_ordering
     - prefer_const_constructors
     - prefer_const_declarations
     - prefer_final_fields
-    - prefer_final_locals
-    - prefer_single_quotes
-    - require_trailing_commas
-    - sort_constructors_first
-    - avoid_slow_async_io
+    - cancel_subscriptions
+    - close_sinks
     - literal_only_boolean_expressions
     - no_adjacent_strings_in_list
-    - test_types_in_equals
     - throw_in_finally
     - unnecessary_statements

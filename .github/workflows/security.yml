@@ -2,48 +2,46 @@ name: Security
 
 on:
   push:
-    branches: ["**"]
   pull_request:
-    branches: ["**"]
   schedule:
     - cron: "0 6 * * 1"  # Every Monday at 06:00 UTC
 
 jobs:
-  audit:
-    name: Dependency Audit
+  dependencies:
+    name: Dependency and Secret Check
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: game
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.47.2"
           channel: stable
           cache: true
 
       - name: Install dependencies
+        working-directory: game
         run: flutter pub get
 
-      - name: Audit dependencies
-        run: dart pub audit
+      # Updates are reported, not enforced. Dart has no built-in advisory
+      # audit; use OSV-Scanner or a similar tool if you need CVE matching.
+      - name: Report outdated dependencies
+        working-directory: game
+        run: dart pub outdated --no-dev-dependencies
+        continue-on-error: true
 
-      - name: Check for hardcoded secrets in Dart files
+      - name: Check for hardcoded secrets in Dart source
+        working-directory: game
         run: |
-          # Fail if any non-test Dart file contains suspicious patterns
-          if grep -rn \
-            -e "SECRET\s*=\s*['\"]" \
-            -e "PASSWORD\s*=\s*['\"]" \
-            -e "API_KEY\s*=\s*['\"]" \
-            -e "PRIVATE_KEY\s*=\s*['\"]" \
+          # Scan lib/ for patterns that suggest hardcoded credentials.
+          # Uses POSIX ERE (-E) patterns compatible with ubuntu grep.
+          FOUND=0
+          grep -rEn \
+            "SECRET[[:space:]]*=[[:space:]]*['\"]|PASSWORD[[:space:]]*=[[:space:]]*['\"]|API_KEY[[:space:]]*=[[:space:]]*['\"]|PRIVATE_KEY[[:space:]]*=[[:space:]]*['\"]" \
             --include="*.dart" \
             --exclude-dir="test" \
-            lib/; then
+            lib/ && FOUND=1 || true
+          if [ "$FOUND" = "1" ]; then
             echo "FAIL: Potential hardcoded secret found in source code"
             exit 1
           else

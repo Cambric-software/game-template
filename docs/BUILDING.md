@@ -5,25 +5,30 @@
 ```bash
 dart run scripts/cambric.dart build windows   # Windows release
 dart run scripts/cambric.dart build android   # Android APK
-dart run scripts/cambric.dart build linux     # Linux (requires Linux host or CI)
+dart run scripts/cambric.dart build linux     # Linux (Linux host or CI)
 ```
+
+The CLI wraps the same Flutter commands documented below.
 
 ---
 
 ## Windows
 
-**Requirements:** Visual Studio 2022 with "Desktop development with C++" workload, Windows 10 SDK.
+**Requirements:** Visual Studio 2022 with the "Desktop development with C++"
+workload and the Windows 10/11 SDK.
 
 ```bash
 cd game
 flutter build windows --release
 ```
 
-Output: `game/build/windows/x64/runner/Release/`
+Output: `game/build/windows/x64/runner/Release/`.
 
-The output directory contains the `.exe` and all required DLLs. Distribute this entire folder or package it with an installer (see `.template/distribution/windows_install.md`).
+Distribute the whole folder; the `.exe` depends on the DLLs and `data/` beside
+it. The template does not ship an installer script. Use Inno Setup, WiX, or
+MSIX if you need one.
 
-For a debug build (faster compile, with debug overlay):
+For a debug build with the overlay:
 
 ```bash
 flutter build windows --debug
@@ -33,63 +38,87 @@ flutter build windows --debug
 
 ## Android
 
-**Requirements:** Android SDK 36+, Java 17+, accepted licenses (`flutter doctor --android-licenses`).
+**Requirements:** Android SDK 36+, Java 17+, accepted licenses.
 
 ```bash
+flutter doctor --android-licenses
 cd game
-flutter build apk --release          # APK for sideloading/testing
-flutter build appbundle --release     # AAB for Play Store
+flutter build apk --release          # APK
+flutter build appbundle --release    # AAB for Play Store
 ```
 
 Output:
+
 - APK: `game/build/app/outputs/flutter-apk/app-release.apk`
 - AAB: `game/build/app/outputs/bundle/release/app-release.aab`
 
-For signed release builds, create `game/android/key.properties` — see `.template/distribution/android_build.md`.
+The template uses the debug signing config for release builds so CI can build
+without secrets. Configure `android/key.properties` and a release keystore
+before publishing; the file is already gitignored.
 
 ---
 
 ## Linux
 
-Linux builds require a Linux toolchain. They are not supported on the Windows development host.
+Linux builds require a Linux toolchain and cannot run on a Windows host.
 
-Build via GitHub Actions (`.github/workflows/build.yml`) or in a WSL2 environment with:
+The `ci.yml` workflow builds on `ubuntu-latest`. To build locally:
 
 ```bash
-sudo apt-get install libgtk-3-dev libblkid-dev liblzma-dev ninja-build cmake clang
-cd game && flutter build linux --release
+sudo apt-get install clang cmake ninja-build pkg-config \
+  libgtk-3-dev liblzma-dev libstdc++-12-dev \
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+  gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+
+cd game
+flutter build linux --release
 ```
 
-Output: `game/build/linux/x64/release/bundle/`
+Output: `game/build/linux/x64/release/bundle/`.
+
+GStreamer packages are required by `audioplayers_linux` (through Flame Audio).
 
 ---
 
 ## Clean Build
 
-Before release or when encountering unexpected build behavior:
-
 ```bash
 dart run scripts/cambric.dart clean
-cd game && flutter pub get
+cd game
+flutter pub get
 flutter build windows --release
 ```
+
+Close running app instances first. On Windows, an open `game.exe` locks its DLLs
+and the link step fails with a file-in-use error.
 
 ---
 
 ## Versioning
 
-Before building a release:
-
 ```bash
 dart run scripts/cambric.dart release 1.2.0
 ```
 
-This updates `cambric.manifest.json` and `game/pubspec.yaml` atomically.
+This updates `cambric.manifest.json` and `game/pubspec.yaml` together. Commit
+both files, then tag `v1.2.0` to publish a release.
 
 ---
 
-## CI Builds
+## CI and Releases
 
-All three platforms build automatically on GitHub Actions when pushing to `main` or `master`. See `.github/workflows/build.yml`.
+`.github/workflows/ci.yml` runs on every push and pull request:
 
-Artifacts are uploaded and retained for 30 days.
+- analyze and test on Ubuntu
+- Android APK on Ubuntu
+- Linux bundle on Ubuntu
+- Windows release on `windows-latest`
+
+Artifacts are kept for 7 days.
+
+`.github/workflows/release.yml` runs on tags matching `v*.*.*`. It runs analyze
+and tests again, builds all three platforms, writes `.sha256` files, and creates
+a GitHub Release with the archives.
+
+`.github/workflows/security.yml` runs the dependency audit and secret scan on
+push, pull request, and weekly.

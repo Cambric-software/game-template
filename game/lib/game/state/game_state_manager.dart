@@ -69,7 +69,7 @@ class GameStateManager {
   bool _isAllowed(GameState from, GameState to) {
     // Define the allowed transitions. This is documentation, not enforcement.
     const allowed = {
-      GameState.boot: {GameState.loading},
+      GameState.boot: {GameState.loading, GameState.mainMenu},
       GameState.loading: {
         GameState.mainMenu,
         GameState.playing,

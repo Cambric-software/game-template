@@ -134,15 +134,43 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
+  int x = Scale(origin.x, scale_factor);
+  int y = Scale(origin.y, scale_factor);
+  int width = Scale(size.width, scale_factor);
+  int height = Scale(size.height, scale_factor);
+
+  // A 1280x720 logical window becomes 1600x900 at 125% scaling and can
+  // exceed a smaller monitor's work area. Keep the first window inside it.
+  MONITORINFO monitor_info = {};
+  monitor_info.cbSize = sizeof(MONITORINFO);
+  if (GetMonitorInfo(monitor, &monitor_info)) {
+    const RECT& work = monitor_info.rcWork;
+    const int margin = Scale(16, scale_factor);
+    const int max_width = (work.right - work.left) - margin;
+    const int max_height = (work.bottom - work.top) - margin;
+    if (width > max_width) width = max_width;
+    if (height > max_height) height = max_height;
+
+    if (x + width > work.right - margin) x = work.right - margin - width;
+    if (y + height > work.bottom - margin) y = work.bottom - margin - height;
+    if (x < work.left) x = work.left;
+    if (y < work.top) y = work.top;
+  }
+
   HWND window = CreateWindow(
       window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
-      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
+      x, y, width, height,
       nullptr, nullptr, GetModuleHandle(nullptr), this);
 
   if (!window) {
     return false;
   }
+
+  // WM_DPICHANGED fires during creation and restores the DPI-scaled size.
+  // Apply the clamped size again so the first Flutter frame matches the
+  // visible client area instead of rendering a larger surface.
+  SetWindowPos(window, nullptr, x, y, width, height,
+               SWP_NOZORDER | SWP_NOACTIVATE);
 
   UpdateTheme(window);
 

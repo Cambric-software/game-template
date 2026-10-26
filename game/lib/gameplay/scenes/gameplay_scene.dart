@@ -2,12 +2,14 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../game/input/input_action.dart';
+import '../../game/runtime/cambric_game.dart';
 import '../../game/scenes/cambric_scene.dart';
+import '../../ui/theme/game_palette.dart';
 
 /// Minimal gameplay scene — the template starting point.
 ///
-/// Demonstrates scene lifecycle, an entity, and rendering.
-/// Replace with your actual game scene.
+/// Demonstrates scene lifecycle, an entity, input-driven movement, and
+/// rendering. Replace with your actual game scene.
 class GameplayScene extends CambricScene {
   @override
   String get sceneName => 'Gameplay';
@@ -23,10 +25,36 @@ class GameplayScene extends CambricScene {
     _hint = TextComponent(
       text: 'WASD / Arrows to move • ESC to pause',
       textRenderer: TextPaint(
-        style: const TextStyle(color: Color(0xFF888888), fontSize: 13),
+        style: TextStyle(
+          color: GamePalette.dark.secondary,
+          fontSize: 13,
+        ),
       ),
     );
     add(_hint);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    final game = findGame();
+    if (game is! CambricGame) return;
+    final input = game.inputState;
+
+    final dx = (input.isPressed(InputAction.moveRight) ? 1 : 0) -
+        (input.isPressed(InputAction.moveLeft) ? 1 : 0);
+    final dy = (input.isPressed(InputAction.moveDown) ? 1 : 0) -
+        (input.isPressed(InputAction.moveUp) ? 1 : 0);
+    if (dx == 0 && dy == 0) return;
+
+    final direction = Vector2(dx.toDouble(), dy.toDouble())..normalize();
+    final next = _player.position + direction * (220 * dt);
+    final half = _player.size / 2;
+    _player.position = Vector2(
+      next.x.clamp(half.x, game.size.x - half.x),
+      next.y.clamp(half.y, game.size.y - half.y),
+    );
   }
 
   @override
@@ -47,9 +75,9 @@ class _PlayerEntity extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
-    final fill = Paint()..color = const Color(0xFF4CAF50);
+    final fill = Paint()..color = GamePalette.dark.primary;
     final outline = Paint()
-      ..color = const Color(0xFF81C784)
+      ..color = GamePalette.dark.accent
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.x, size.y), fill);

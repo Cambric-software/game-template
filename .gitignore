@@ -1,3 +1,6 @@
+# ── Cambric local state (machine-specific, never commit) ─────────────────────
+.cambric/
+
 # ── Flutter / Dart ───────────────────────────────────────────────────────
 .dart_tool/
 .flutter-plugins

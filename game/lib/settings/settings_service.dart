@@ -73,6 +73,12 @@ class SettingsService {
     await _p.setString('controls.bindings', jsonEncode(bindings));
   }
 
+  // ── Interface ─────────────────────────────────────────────────────────
+  /// `dark` or `light`. Games default to dark because the canvas usually is.
+  String get uiTheme => _p.getString('interface.theme') ?? 'dark';
+  set uiTheme(String v) =>
+      _p.setString('interface.theme', v == 'light' ? 'light' : 'dark');
+
   // ── Language ──────────────────────────────────────────────────────────
   String get language => _p.getString('language') ?? 'en';
   set language(String v) => _p.setString('language', v);

@@ -30,6 +30,11 @@ class LocalizationService {
   String _currentLocale = 'en';
   TextDirection _textDirection = TextDirection.ltr;
 
+  /// Locale files are small and never change at runtime. Caching the parsed
+  /// maps avoids a second asset read when the player switches back, and
+  /// avoids re-awaiting an asset future across widget-test boundaries.
+  static final Map<String, Map<String, String>> _cache = {};
+
   String get currentLocale => _currentLocale;
   TextDirection get textDirection => _textDirection;
   bool get isRtl => _textDirection == TextDirection.rtl;
@@ -40,26 +45,37 @@ class LocalizationService {
   Future<void> load(String locale) async {
     final target = supportedLocales.contains(locale) ? locale : 'en';
 
+    final cached = _cache[target];
+    if (cached != null) {
+      _apply(target, cached);
+      return;
+    }
+
     try {
       final jsonString = await rootBundle.loadString(
         'assets/i18n/$target.json',
       );
       final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      final strings = data.map((k, v) => MapEntry(k, v.toString()));
 
-      _strings = data.map((k, v) => MapEntry(k, v.toString()));
-      _currentLocale = target;
-
-      final direction = _strings['direction'] ?? 'ltr';
-      _textDirection =
-          direction == 'rtl' ? TextDirection.rtl : TextDirection.ltr;
-
-      _log.info('Loaded locale: $target (${_textDirection.name})');
+      _cache[target] = strings;
+      _apply(target, strings);
     } catch (e, st) {
       _log.severe('Failed to load locale $target', e, st);
       _strings = {};
       _currentLocale = 'en';
       _textDirection = TextDirection.ltr;
     }
+  }
+
+  void _apply(String target, Map<String, String> strings) {
+    _strings = strings;
+    _currentLocale = target;
+
+    final direction = _strings['direction'] ?? 'ltr';
+    _textDirection = direction == 'rtl' ? TextDirection.rtl : TextDirection.ltr;
+
+    _log.info('Loaded locale: $target (${_textDirection.name})');
   }
 
   /// Translate [key], substituting `{param}` placeholders.

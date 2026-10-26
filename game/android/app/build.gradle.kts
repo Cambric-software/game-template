@@ -15,8 +15,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.cambric.cambric_game"
+        // Application ID — updated by `dart run scripts/cambric_setup.dart`
+        // when you configure your game. Default matches cambric.manifest.json.
+        applicationId = "com.cambric.game"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

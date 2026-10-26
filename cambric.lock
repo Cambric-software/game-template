@@ -1,0 +1,17 @@
+{
+  "lockVersion": 1,
+  "generatedAt": "2026-10-10T01:02:14.748075",
+  "cambric": {
+    "templateVersion": "0.1.0",
+    "gameVersion": "0.1.0",
+    "repository": "Cambric-software/game-template"
+  },
+  "environment": {
+    "dart": "3.13.2",
+    "flutter": "3.47.2",
+    "flame": "1.38.2",
+    "platform": "windows",
+    "os": "\"Windows 11 Home\" 10.0 (Build 26200)"
+  },
+  "note": "Regenerate: dart run scripts/cambric_lock.dart  |  Check drift: dart run scripts/cambric.dart doctor"
+}

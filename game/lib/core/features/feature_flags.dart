@@ -25,7 +25,7 @@ class FeatureFlags {
   static bool gamepadSupport = true;
 
   // ── Cambric infrastructure ─────────────────────────────────────────────
-  static bool updateChecks = true;
+  static bool updateChecks = false;
   static bool networkFeatures = true;
   static bool diagnosticsEnabled = true;
   static bool autosaveEnabled = true;
